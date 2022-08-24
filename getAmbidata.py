@@ -1,5 +1,7 @@
 import json
 import requests
+from datetime import datetime
+
 with open('src/ambientKey.json') as ambientURLJs:
     ambientURL = json.load(ambientURLJs)['AmbiURL']
 
@@ -8,16 +10,17 @@ def getAmbientTemp(getURL):
     return getData
 
 def getAmbientTime(getURL):
-    getData = json.loads(requests.get(str(getURL)).text)[0]['created']
+    getData =str(datetime.strptime(json.loads(requests.get(str(getURL)).text)[0]['created'] + '+0000', '%Y-%m-%dT%H:%M:%S.%fZ%z').astimezone().replace(microsecond=0)).replace('+09:00','').replace('-','/')
     return getData
 
+timeData = []
 tempData = []
 for i in range(len(ambientURL)):
     tempData.append(getAmbientTemp(ambientURL[i]))
-
-timeData = []
-for i in range(len(ambientURL)):
     timeData.append(getAmbientTime(ambientURL[i]))
 
-for i in range(len(tempData)):
-    print("temp: "+str(tempData[i])+" time: "+str(timeData[i]))
+timeTemp = []
+for i in range(len(timeData)):
+    timeTemp.append({"No":i+1,"temp":tempData[i], "time":timeData[i]})
+with open('src/timeTemp.json', 'w') as outputFile:
+    json.dump({"timeTemp":timeTemp}, outputFile)
